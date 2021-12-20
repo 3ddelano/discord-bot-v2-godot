@@ -1,8 +1,11 @@
 extends Node2D
+signal interaction_create(world, bot, interaction, data)
 
 const prefix = "gd."
 
 var interactions = {}
+var commands = {}
+var command_aliases = {}
 
 func _ready() -> void:
 	var bot = DiscordBot.new()
@@ -20,6 +23,7 @@ func _ready() -> void:
 	bot.connect("message_create", self, "_on_message_create")
 	bot.connect("interaction_create", self, "_on_interaction_create")
 	bot.login()
+	_load_commands(bot)
 
 func _on_bot_ready(bot: DiscordBot):
 	print("Logged in as " + bot.user.username + "#" + bot.user.discriminator)
@@ -34,7 +38,8 @@ func _on_message_create(bot: DiscordBot, message: Message, channel: Dictionary) 
 	if message.author.bot or not message.content.begins_with(prefix):
 		return
 
-	var raw_content = message.content.lstrip(prefix)
+	# Make sure to use trim_prefix() instead of lstrip()
+	var raw_content = message.content.trim_prefix(prefix)
 	var tokens = []
 	var r = RegEx.new()
 	r.compile("\\S+") # Negated whitespace character class
@@ -45,99 +50,72 @@ func _on_message_create(bot: DiscordBot, message: Message, channel: Dictionary) 
 	var args = tokens
 	_handle_command(bot, message, channel, cmd_or_alias, args)
 
-func _handle_command(bot: DiscordBot, message: Message, channel: Dictionary, cmd: String, args: Array):
+func _load_commands(bot: DiscordBot) -> void:
+	var cmd_path = "res://cmds/"
+	var dir = Directory.new()
+	if dir.open(cmd_path) != OK:
+		push_error("An error occurred when trying to open /cmds folder.")
+		return
 
-	match cmd:
-		"ping":
-			# Sends bot latency
-			var starttime = OS.get_ticks_msec() # start epoch
-			var msg = yield(bot.reply(message, "Ping..."), "completed") # Wait for message to be sent
+	dir.list_dir_begin()
+	while true:
+		var file = dir.get_next()
+		if file == "": # End of files
+			break
+		elif not file.begins_with(".") and (file.ends_with(".gd") or file.ends_with(".gdc")):
+			var script = load("res://cmds/" + file.get_basename() + ".gd").new()
+			var data = script.help
 
-			var latency = str(OS.get_ticks_msec() - starttime)
+			# Ensure that the commands don't have the default help values
+			assert(data.name != "test_name" and data.category != "test_category" and data.description != "test_description" and script.get_usage(prefix) != "test usage", "Must change default values for Command in " + file)
 
-			bot.edit(msg, "Pong! My latency is " + latency + " ms.")
+			if not data.enabled:
+				continue
 
-		"image":
-			# Sends the guild icon
-			var guild_id = message.guild_id
-			var bytes = yield(bot.get_guild_icon(guild_id), "completed")
+			if script.has_method("on_ready"):
+				script.on_ready(self, bot)
 
-			var image = Helpers.to_png_image(bytes)
-			var texture = Helpers.to_image_texture(image)
+			commands[data.name] = script
 
-			$GuildIcon.texture = texture
+			if not data.has("aliases"):
+				continue
 
-			bot.send(message, {
-				"files": [
-					{
-						"name": "avatar.png",
-						"media_type": "image/png",
-						"data": bytes
-					}
-				]
-			})
+			for alias in data.aliases:
+				assert(not command_aliases.has(alias), "Duplicate cmd aliases found in cmd: " + file)
 
-		"button":
-			# Shows some buttons
-			var button = MessageButton.new().set_style(MessageButton.STYLES.DEFAULT)
-			button.set_custom_id("my_custom_button").set_label("Click Me")
+				command_aliases[alias] = data.name
 
-			var button2 = MessageButton.new().set_style(MessageButton.STYLES.DANGER)
-			button2.set_custom_id("my_custom_button2").set_label("Do not Click Me")
+	print("Loaded " + str(commands.size()) + " cmds")
+	dir.list_dir_end()
 
-			var row = MessageActionRow.new()
-			var row2 = MessageActionRow.new()
+func _handle_command(bot: DiscordBot, message: Message, channel: Dictionary, cmd_or_alias: String, args: Array):
+	var cmd = null
+	if command_aliases.has(cmd_or_alias):
+		print('found ', command_aliases[cmd_or_alias])
+		cmd = commands[command_aliases[cmd_or_alias]]
+	elif commands.has(cmd_or_alias):
+		cmd = commands[cmd_or_alias]
 
-			row.add_component(button)
-			row2.add_component(button2)
+	if cmd == null:
+		return
 
-			var msg = yield(bot.send(message, {
-				"content": "Here's some buttons",
-				"components": [row, row2]
-			}), "completed")
+	print("CMD: " + cmd.help.name + " by " + message.author.username + "#" + message.author.discriminator + " (" + message.author.id + ")")
+	cmd.on_message(self, bot, message, channel, args)
 
-			# Cache the message with buttons
-			interactions[msg.id] = {
-				"author_id": message.author.id,
-			}
-
-		"embed":
-			# Sends an embed
-			var embed1 = Embed.new().set_description("First Embed").set_color("#ff0000")
-			var embed2 = Embed.new().set_description("Second Embed").set_color("#00ff00")
-
-			var msg = yield(bot.send(message, 'Content here too', {
-				"embeds": [embed1, embed2]
-			}), "completed")
+func remove_buttons_from_interaction(interaction: DiscordInteraction, msg = ":robot: Buttons have timed out") -> void:
+	var embed = Embed.new().set_description(msg)
+	var new_embeds = interaction.message.embeds + [embed]
+	interaction.update({
+		"content": interaction.message.content,
+		"embeds": new_embeds,
+		"components": []
+	})
 
 func _on_interaction_create(bot: DiscordBot, interaction: DiscordInteraction):
-	# If not a button then return
-	if not interaction.is_button():
-		return
-
 	var msg_id = interaction.message.id
 
-	if not interactions.has(msg_id):
-		# Disable the buttons from the messaage if the interaction is not cached
-		for row in interaction.message.components:
-			for component in row.components:
-				if component.type == 2:
-					component["disabled"] = true
-
-		interaction.update({
-			"content": interaction.message.content,
-			"components": interaction.message.components
-		})
-
-		return
-
-	match interaction.data.custom_id:
-		"my_custom_button":
-			interaction.reply({
-				"content": "You pressed the button."
-			})
-
-		"my_custom_button2":
-			interaction.reply({
-				"content": "Why did you press me?"
-			})
+	# Emit the signal to the commands
+	if interactions.has(msg_id):
+		emit_signal("interaction_create", self, bot, interaction, interactions[msg_id])
+	else:
+		remove_buttons_from_interaction(interaction)
