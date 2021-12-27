@@ -102,7 +102,7 @@ func _handle_command(bot: DiscordBot, message: Message, channel: Dictionary, cmd
 	print("CMD: " + cmd.help.name + " by " + message.author.username + "#" + message.author.discriminator + " (" + message.author.id + ")")
 	cmd.on_message(self, bot, message, channel, args)
 
-func remove_buttons_from_interaction(interaction: DiscordInteraction, msg = ":robot: Buttons have timed out") -> void:
+func remove_components_from_interaction(interaction: DiscordInteraction, msg = ":robot: Components have timed out!") -> void:
 	var embed = Embed.new().set_description(msg)
 	var new_embeds = interaction.message.embeds + [embed]
 	interaction.update({
@@ -118,4 +118,4 @@ func _on_interaction_create(bot: DiscordBot, interaction: DiscordInteraction):
 	if interactions.has(msg_id):
 		emit_signal("interaction_create", self, bot, interaction, interactions[msg_id])
 	else:
-		remove_buttons_from_interaction(interaction)
+		remove_components_from_interaction(interaction)

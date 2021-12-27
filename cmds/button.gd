@@ -48,7 +48,7 @@ func get_usage(p: String) -> String:
 
 var help = {
 	"name": "button",
-	"category": "General",
+	"category": "Button",
 	"aliases": [],
 	"enabled": true,
 	"description": "Sends some buttons",

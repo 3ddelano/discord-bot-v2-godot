@@ -82,7 +82,7 @@ func get_usage(p: String) -> String:
 
 var help = {
 	"name": "nav",
-	"category": "General",
+	"category": "Button",
 	"aliases": [],
 	"enabled": true,
 	"description": "Sends a navigable embed",

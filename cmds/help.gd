@@ -33,7 +33,7 @@ func on_message(main, bot: DiscordBot, message: Message, channel: Dictionary, ar
 
 	var embed = Embed.new().set_title("Here's some helpful information").set_timestamp().set_color("#f2b210")
 	embed.set_footer("Total Cmds: " + str(main.commands.size()) + " | Requested by " + message.author.username + "#" + message.author.discriminator + " | Powered by Discord.gd")
-	embed.set_description("For extended command usage, use `%shelp <command>`\n\nPrefix is `%s`\nEg. `%sabout`" % [main.prefix, main.prefix, main.prefix])
+	embed.set_description("For extended command usage, use `%shelp <command>`\n\nPrefix is `%s`\nEg. `%sabout`" % [main.prefix, main.prefix, main.prefix]).set_thumbnail("https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Ambox_blue_question.svg/768px-Ambox_blue_question.svg.png")
 
 	var sorted = []
 	for cmd in main.commands.values():
@@ -61,7 +61,7 @@ func on_message(main, bot: DiscordBot, message: Message, channel: Dictionary, ar
 func _send_indiviual_command_help(main, bot: DiscordBot, message: Message, cmd):
 	var embed = Embed.new().set_title(cmd.help.name.capitalize() + " Command").set_timestamp()
 	embed.set_footer("Requested by " + message.author.username + "#" + message.author.discriminator)
-	embed.set_description("**Description**\n" + cmd.help.description).set_color("#f2b210")
+	embed.set_description("**Description**\n" + cmd.help.description).set_color("#f2b210").set_thumbnail("https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Ambox_blue_question.svg/768px-Ambox_blue_question.svg.png")
 
 	if cmd.help.has("aliases") and cmd.help.aliases.size() > 0:
 		embed.add_field("Aliases", "`" + main.prefix + PoolStringArray(cmd.help.aliases).join("`, `" + main.prefix) + "`")
