@@ -7,6 +7,8 @@ Discord.gd Tutorial Discord Bot v2
 <br>
 <img alt="Godot3" src="https://img.shields.io/badge/-Godot 3.x-478CBF?style=for-the-badge&logo=godotengine&logoWidth=20&logoColor=white" />
 
+## [Watch tutorial playlist on YouTube](https://youtube.com/playlist?list=PL5t0hR7ADzuk4M_GDeGcW7cDjG_xp710p)
+
 Features
 --------------
 
@@ -22,6 +24,10 @@ Getting Started
 1. Download this repo.
 2. Rename the file `token.secret-example` to `token.secret` and paste your BOT_TOKEN in the file.
 3. Open the `project.godot` file in Godot. Then run the `Main.tscn` scene.
+
+Previous Source Code
+----------
+For source code of previous parts of the tutorial, see [branches](https://github.com/3ddelano/discord-bot-v2-godot/branches)
 
 Support
 ----------
