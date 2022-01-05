@@ -25,7 +25,6 @@ var flows = {
 
 func on_ready(main, bot: DiscordBot):
 	main.connect("interaction_create", self, "on_interaction")
-	bot.connect("message_create", self, "on_bot_message_create")
 
 func on_message(main, bot: DiscordBot, message: Message, channel: Dictionary, args: Array) -> void:
 	# Store various important data for this interaction

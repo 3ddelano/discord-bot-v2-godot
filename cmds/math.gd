@@ -8,7 +8,6 @@ var last_digit = RegEx.new()
 
 func on_ready(main, bot: DiscordBot):
 	main.connect("interaction_create", self, "on_interaction")
-	bot.connect("message_create", self, "on_bot_message_create")
 
 	first_digit.compile("^[-]?(?'first'[1-9])(?'remaining'[0-9]*)$")
 	last_digit.compile("^[-]?(?'remaining'[1-9][0-9]*)(?'last'[0-9])$")

@@ -13,7 +13,7 @@ func on_message(main, bot: DiscordBot, message: Message, channel: Dictionary, ar
 	var time_running = OS.get_ticks_msec() - started_epoch
 	var embed = Embed.new().set_title("About Me").set_timestamp().set_color("#f2b210")
 
-	embed.set_description("I am made by `3ddelano#6033` using the Godot Engine and an open-source plugin called Discord.gd.\n\n[Join Support Server](https://discord.gg/FZY9TqW)\n[Support My Creator](https://www.buymeacoffee.com/3ddelano)")
+	embed.set_description("I am made by `3ddelano#6033` using the Godot Engine and an open-source plugin called Discord.gd.\n\nSource Code: [Github Repo](https://github.com/3ddelano/discord-bot-v2-godot)\n\n[Join Support Server](https://discord.gg/FZY9TqW)\n[Support My Creator](https://www.buymeacoffee.com/3ddelano)")
 
 	embed.set_thumbnail(bot.user.get_display_avatar_url())
 	embed.add_field("Godot Version", Engine.get_version_info().string, true)

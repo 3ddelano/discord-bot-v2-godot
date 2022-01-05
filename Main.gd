@@ -16,7 +16,8 @@ func _ready() -> void:
 	add_child(bot)
 
 	var file = File.new()
-	file.open("res://token.secret", File.READ)
+	var err = file.open("res://token.secret", File.READ)
+	print(err)
 	var token = file.get_as_text()
 
 	if token == null or token == "":
@@ -52,7 +53,7 @@ func _on_bot_ready(bot: DiscordBot):
 	#_register_application_commands(bot, "373766421882077186")
 
 	# -----Global (may take upto 1hr to update)
-	_register_application_commands(bot)
+	#_register_application_commands(bot)
 
 func _on_message_create(bot: DiscordBot, message: Message, channel: Dictionary) -> void:
 	if message.author.bot or not message.content.begins_with(prefix):
