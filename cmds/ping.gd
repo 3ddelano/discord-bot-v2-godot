@@ -1,4 +1,7 @@
 extends Reference
+"""
+Sends the latency of the bot
+"""
 
 func on_message(main, bot: DiscordBot, message: Message, channel: Dictionary, args: Array) -> void:
 	var starttime = OS.get_ticks_msec()

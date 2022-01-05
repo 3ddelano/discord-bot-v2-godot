@@ -10,6 +10,11 @@ config_version=4
 
 _global_script_classes=[ {
 "base": "Reference",
+"class": "ApplicationCommand",
+"language": "GDScript",
+"path": "res://addons/discord_gd/classes/application_command.gd"
+}, {
+"base": "Reference",
 "class": "BitField",
 "language": "GDScript",
 "path": "res://addons/discord_gd/classes/bit_field.gd"
@@ -70,6 +75,7 @@ _global_script_classes=[ {
 "path": "res://addons/discord_gd/classes/user.gd"
 } ]
 _global_script_class_icons={
+"ApplicationCommand": "",
 "BitField": "",
 "DiscordBot": "",
 "DiscordInteraction": "",
@@ -89,6 +95,15 @@ _global_script_class_icons={
 config/name="Discord.gd Tutorial v2"
 run/main_scene="res://Main.tscn"
 config/icon="res://icon.png"
+
+[display]
+
+window/size/width=360
+window/size/height=360
+
+[editor_plugins]
+
+enabled=PoolStringArray( "res://addons/discord_gd/plugin.cfg" )
 
 [physics]
 

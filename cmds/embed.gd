@@ -1,4 +1,7 @@
 extends Reference
+"""
+Example command to showcase using Embed
+"""
 
 func on_message(main, bot: DiscordBot, message: Message, channel: Dictionary, args: Array) -> void:
 	# Sends an embed

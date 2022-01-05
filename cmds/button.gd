@@ -1,4 +1,7 @@
 extends Reference
+"""
+Example command to showcase using MessageButton
+"""
 
 func on_ready(main, bot: DiscordBot):
 	main.connect("interaction_create", self, "on_interaction")
@@ -48,7 +51,7 @@ func get_usage(p: String) -> String:
 
 var help = {
 	"name": "button",
-	"category": "General",
+	"category": "Button",
 	"aliases": [],
 	"enabled": true,
 	"description": "Sends some buttons",
