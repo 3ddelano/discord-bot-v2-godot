@@ -1,4 +1,7 @@
 extends Reference
+"""
+Sends some basic information about the bot
+"""
 
 var started_epoch
 
