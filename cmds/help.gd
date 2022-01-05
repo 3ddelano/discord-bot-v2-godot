@@ -1,4 +1,7 @@
 extends Reference
+"""
+A fairly advanced help command
+"""
 
 class CommandSorter:
 	static func sort_ascending(a, b):

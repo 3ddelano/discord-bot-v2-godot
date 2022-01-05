@@ -1,4 +1,8 @@
 extends Reference
+"""
+A math quiz game to showcase using SelectMenu.
+"""
+
 var first_digit = RegEx.new()
 var last_digit = RegEx.new()
 

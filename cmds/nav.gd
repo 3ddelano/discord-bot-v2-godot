@@ -1,4 +1,7 @@
 extends Reference
+"""
+A navigable embed based on Embed and MessageButton
+"""
 
 var pages_data = [
 	{

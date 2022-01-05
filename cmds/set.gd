@@ -1,4 +1,7 @@
 extends Reference
+"""
+Example command showcasing nested SelectMenu
+"""
 
 var flows = {
 	"set": {
