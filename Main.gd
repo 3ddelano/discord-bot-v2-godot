@@ -17,13 +17,18 @@ func _ready() -> void:
 
 	var file = File.new()
 	var err = file.open("res://token.secret", File.READ)
-	print(err)
-	var token = file.get_as_text()
-
-	if token == null or token == "":
-		push_error("Bot TOKEN missing")
+	var token
+	if err == OK:
+		token = file.get_as_text()
+	elif token == null or token == "":
+		# Check for token in Environment variable
+		if OS.has_environment("BOT_TOKEN"):
+			token = OS.get_environment("BOT_TOKEN")
+		else:
+			push_error("Bot TOKEN missing")
 
 	bot.TOKEN = token
+	bot.INTENTS = 4609
 	bot.connect("bot_ready", self, "_on_bot_ready")
 	bot.connect("message_create", self, "_on_message_create")
 	bot.connect("interaction_create", self, "_on_interaction_create")
@@ -53,7 +58,8 @@ func _on_bot_ready(bot: DiscordBot):
 	#_register_application_commands(bot, "373766421882077186")
 
 	# -----Global (may take upto 1hr to update)
-	#_register_application_commands(bot)
+	_register_application_commands(bot)
+
 
 func _on_message_create(bot: DiscordBot, message: Message, channel: Dictionary) -> void:
 	if message.author.bot or not message.content.begins_with(prefix):
@@ -154,6 +160,7 @@ func _handle_command(bot: DiscordBot, message: Message, channel: Dictionary, cmd
 		return
 
 	print("CMD: " + cmd.help.name + " by " + message.author.username + "#" + message.author.discriminator + " (" + message.author.id + ")")
+
 	cmd.on_message(self, bot, message, channel, args)
 
 func remove_components_from_interaction(interaction: DiscordInteraction, msg = ":robot: Components have timed out!") -> void:

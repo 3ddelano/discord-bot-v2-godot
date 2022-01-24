@@ -5,7 +5,7 @@ Example command to showcase using choices and ApplicationCommand.choice()
 
 func execute(main, bot: DiscordBot, interaction: DiscordInteraction, options: Array) -> void:
 	var location = options[0].value
-	print(location)
+	#print(location)
 	interaction.reply({
 		"content": "Your location was set to: `%s`" % location
 	})

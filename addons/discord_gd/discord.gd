@@ -139,11 +139,13 @@ func get_guild_icon(guild_id: String, size: int = 256) -> PoolByteArray:
 
 	if not guild:
 		push_error('Guild not found.')
-		return null
+		yield(get_tree(), 'idle_frame')
+		return PoolByteArray()
 
 	if not guild.icon:
 		push_error('Guild has no icon set.')
-		return null
+		yield(get_tree(), 'idle_frame')
+		return PoolByteArray()
 
 	if size != 256:
 		assert(size in GUILD_ICON_SIZES, 'Invalid size for guild icon provided')
@@ -162,6 +164,11 @@ func get_guild_emojis(guild_id: String) -> Array:
 func get_guild_member(guild_id: String, member_id: String) -> Dictionary:
 	var member = yield(_send_get('/guilds/%s/members/%s' % [guild_id, member_id]), 'completed')
 	return member
+
+
+func get_user(user_id: String) -> Dictionary:
+	var user = yield(_send_get('/users/%s' % [user_id]), 'completed')
+	return user
 
 
 func create_dm_channel(user_id: String) -> Dictionary:
@@ -1070,6 +1077,7 @@ func _update_presence(new_presence: Dictionary) -> void:
 func _jsonstring_to_dict(data: String) -> Dictionary:
 	var json_parsed = JSON.parse(data)
 	return json_parsed.result
+
 
 
 func _setup_heartbeat_timer(interval: int) -> void:

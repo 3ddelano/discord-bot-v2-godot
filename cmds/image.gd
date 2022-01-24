@@ -8,8 +8,10 @@ func on_message(main, bot: DiscordBot, message: Message, channel: Dictionary, ar
 	var guild_id = message.guild_id
 	var bytes: PoolByteArray = yield(bot.get_guild_icon(guild_id), "completed")
 
-	var image = Helpers.to_png_image(bytes)
-	var texture = Helpers.to_image_texture(image)
+
+	if (bytes.empty()):
+		bot.reply(message, "Server doesn't have an image.")
+		return
 
 	bot.send(message, {
 		"files": [
