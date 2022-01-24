@@ -4,7 +4,7 @@ Example command to showcase ApplicationCommand.role_option()
 """
 
 func execute(main, bot: DiscordBot, interaction: DiscordInteraction, options: Array) -> void:
-	print(interaction.data)
+	#print(interaction.data)
 	var role_id = options[0].value
 	var role = interaction.data.resolved.roles[role_id]
 	var role_perms = Permissions.new(role.permissions).to_array()

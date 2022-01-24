@@ -7,8 +7,8 @@ func execute(main, bot: DiscordBot, interaction: DiscordInteraction, options: Ar
 	var sub_command_group = options[0].name
 	var sub_command = options[0].options[0].name
 
-	print(sub_command_group)
-	print(sub_command)
+	#print(sub_command_group)
+	#print(sub_command)
 
 	interaction.reply({
 		"content": "Sub command used was: `market %s %s`" % [sub_command_group, sub_command]

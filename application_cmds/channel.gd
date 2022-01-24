@@ -6,7 +6,7 @@ Example command to showcase ApplicationCommand.channel_option()
 
 func execute(main, bot: DiscordBot, interaction: DiscordInteraction, options: Array) -> void:
 	var channel_id = options[0].value
-	print(interaction.data)
+	# print(interaction.data)
 	var channel = interaction.data.resolved.channels[channel_id]
 	interaction.reply({
 		"content": "You selected channel: %s <#%s>" % [channel.name, channel_id]
