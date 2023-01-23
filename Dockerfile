@@ -1,6 +1,6 @@
 FROM alpine:latest
 
-ENV GODOT_VERSION "3.4.5" # Version of Godot to download
+ENV GODOT_VERSION 3.4.5
 
 RUN apk update
 RUN apk add --no-cache bash
