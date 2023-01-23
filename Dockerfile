@@ -2,7 +2,10 @@ FROM frolvlad/alpine-glibc:alpine-3.15_glibc-2.34
 
 ENV GODOT_VERSION "3.4.5" # Version of Godot to download
 
-RUN apk update && apk add --no-cache unzip wget
+RUN apk update
+RUN apk add --no-cache bash
+RUN apk add --no-cache unzip
+RUN apk add --no-cache wget
 
 RUN wget --quiet https://downloads.tuxfamily.org/godotengine/${GODOT_VERSION}/Godot_v${GODOT_VERSION}-stable_linux_headless.64.zip \
     && mkdir ~/.cache \
