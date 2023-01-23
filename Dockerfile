@@ -11,7 +11,7 @@ RUN apk add --no-cache git
 
 # Allow this to run Godot
 RUN wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.35-r0/glibc-2.35-r0.apk
-RUN apk add --allow-untrusted glibc-2.35-r0.apk
+RUN apk add --force-overwrite --allow-untrusted glibc-2.35-r0.apk
 
 # Download Godot, version is set from environment variables
 RUN wget https://downloads.tuxfamily.org/godotengine/${GODOT_VERSION}/Godot_v${GODOT_VERSION}-stable_linux_server.64.zip \
