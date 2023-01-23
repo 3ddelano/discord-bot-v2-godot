@@ -1,4 +1,4 @@
-token.secret
+.env
 icon.png.import
 
 # Godot-specific ignores

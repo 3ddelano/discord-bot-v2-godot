@@ -22,14 +22,14 @@ Getting Started
 ----------
 
 1. Download this repo.
-2. Rename the file `token.secret-example` to `token.secret` and paste your BOT_TOKEN in the file.
+2. Rename the file `.env-sample` to `.env` and paste your BOT_TOKEN in the file.
 3. Open the `project.godot` file in Godot. Then run the `Main.tscn` scene.
 
 Previous Source Code
 ----------
 For source code of previous parts of the tutorial, see [branches](https://github.com/3ddelano/discord-bot-v2-godot/branches)
 
-Host the bot for free on Heroku
+Host the bot for free on Heroku (free version was discontined by Heroku on November 28, 2022)
 ----------
 1. Create a new app on [Heroku](https://heroku.com) (Needs signing up for a Free account)
 2. Goto the `Settings` tab, in the `Config Vars` section, click `Reveal Config Vars`
