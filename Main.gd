@@ -11,21 +11,30 @@ var application_commands = {}
 var bookmarks = {}
 var favorites = {}
 
+func read_env():
+	var env = {}
+	var file = File.new()
+	var err = file.open("res://.env", File.READ)
+	var line = ""
+	while not file.eof_reached():
+		line = file.get_line()
+		var tokens = Array(line.split("="))
+		if(tokens.size() != 2): continue
+		var key = tokens.pop_front()
+		var value = PoolStringArray(tokens).join("=")
+		env[key] = value.lstrip("\"").rstrip("\"")
+	return env
+
 func _ready() -> void:
 	var bot = DiscordBot.new()
 	add_child(bot)
 
-	var file = File.new()
-	var err = file.open("res://token.secret", File.READ)
-	var token
-	if err == OK:
-		token = file.get_as_text()
-	elif token == null or token == "":
-		# Check for token in Environment variable
-		if OS.has_environment("BOT_TOKEN"):
-			token = OS.get_environment("BOT_TOKEN")
-		else:
-			push_error("Bot TOKEN missing")
+	var env = read_env()
+	# Try to read token from global environment variables
+	var token = OS.get_environment("DISCORD_BOT_TOKEN")
+	if not token or (token and len(token) < 10):
+		# Read token from local .env file
+		token = env["DISCORD_BOT_TOKEN"]
 
 	bot.TOKEN = token
 	bot.INTENTS = 4609
