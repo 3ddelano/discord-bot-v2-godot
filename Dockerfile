@@ -1,4 +1,4 @@
-FROM frolvlad/alpine-glibc:alpine-3.17
+FROM alpine:latest
 
 ENV GODOT_VERSION "3.4.5" # Version of Godot to download
 
