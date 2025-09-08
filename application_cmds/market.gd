@@ -1,4 +1,4 @@
-extends Reference
+extends RefCounted
 """
 Example command to showcase ApplicationCommand.sub_command_group_option() and .sub_command_option()
 """

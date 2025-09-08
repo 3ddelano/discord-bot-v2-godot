@@ -1,4 +1,4 @@
-extends Reference
+extends RefCounted
 """
 Simply replies back with the same text
 """

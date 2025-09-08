@@ -1,4 +1,4 @@
-extends Reference
+extends RefCounted
 """
 Example command showcasing how to send files stored as PoolByteArray
 """
@@ -6,10 +6,10 @@ Example command showcasing how to send files stored as PoolByteArray
 func on_message(main, bot: DiscordBot, message: Message, channel: Dictionary, args: Array) -> void:
 	# Sends the guild icon
 	var guild_id = message.guild_id
-	var bytes: PoolByteArray = yield(bot.get_guild_icon(guild_id), "completed")
+	var bytes: PackedByteArray = await bot.get_guild_icon(guild_id)
 
 
-	if (bytes.empty()):
+	if bytes.is_empty():
 		bot.reply(message, "Server doesn't have an image.")
 		return
 

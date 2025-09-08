@@ -1,4 +1,4 @@
-extends Reference
+extends RefCounted
 
 #func on_ready(main, bot: DiscordBot) -> void:
 #	pass

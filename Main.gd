@@ -11,36 +11,29 @@ var application_commands = {}
 var bookmarks = {}
 var favorites = {}
 
-func read_env():
-	var env = {}
-	var file = File.new()
-	var err = file.open("res://.env", File.READ)
-	var line = ""
-	while not file.eof_reached():
-		line = file.get_line()
-		var tokens = Array(line.split("="))
-		if(tokens.size() != 2): continue
-		var key = tokens.pop_front()
-		var value = PoolStringArray(tokens).join("=")
-		env[key] = value.lstrip("\"").rstrip("\"")
-	return env
+func _load_bot_token() -> String:
+	# read from .env file DISORD_BOT_TOKEN
+	var lines = FileAccess.get_file_as_string(".env").split("\n")
+	for line in lines:
+		if line.begins_with("DISCORD_BOT_TOKEN="):
+			return line.split("=")[1]
+	return ""
 
 func _ready() -> void:
 	var bot = DiscordBot.new()
 	add_child(bot)
 
-	var env = read_env()
 	# Try to read token from global environment variables
 	var token = OS.get_environment("DISCORD_BOT_TOKEN")
 	if not token or (token and len(token) < 10):
 		# Read token from local .env file
-		token = env["DISCORD_BOT_TOKEN"]
+		token = _load_bot_token()
 
 	bot.TOKEN = token
 	bot.INTENTS = 4609
-	bot.connect("bot_ready", self, "_on_bot_ready")
-	bot.connect("message_create", self, "_on_message_create")
-	bot.connect("interaction_create", self, "_on_interaction_create")
+	bot.bot_ready.connect(_on_bot_ready)
+	bot.message_create.connect(_on_message_create)
+	bot.interaction_create.connect(_on_interaction_create)
 	bot.login()
 	_load_commands(bot)
 	_load_application_commands(bot)
@@ -86,10 +79,11 @@ func _on_message_create(bot: DiscordBot, message: Message, channel: Dictionary) 
 	var args = tokens
 	_handle_command(bot, message, channel, cmd_or_alias, args)
 
+
 func _load_commands(bot: DiscordBot) -> void:
 	var cmd_path = "res://cmds/"
-	var dir = Directory.new()
-	if dir.open(cmd_path) != OK:
+	var dir = DirAccess.open(cmd_path)
+	if not dir:
 		push_error("An error occurred when trying to open /cmds/ folder.")
 		return
 
@@ -126,8 +120,9 @@ func _load_commands(bot: DiscordBot) -> void:
 
 func _load_application_commands(bot: DiscordBot) -> void:
 	var app_cmd_path = "res://application_cmds/"
-	var dir = Directory.new()
-	if dir.open(app_cmd_path) != OK:
+	var dir = DirAccess.open(app_cmd_path)
+	
+	if not dir:
 		push_error("An error occurred when trying to open /application_cmds/ folder.")
 		return
 

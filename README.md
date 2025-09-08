@@ -5,9 +5,16 @@ Discord.gd Tutorial Discord Bot v2
 > 100% GDScript
 
 <br>
-<img alt="Godot3" src="https://img.shields.io/badge/-Godot 3.x-478CBF?style=for-the-badge&logo=godotengine&logoWidth=20&logoColor=white" />
+<img alt="Godot4" src="https://img.shields.io/badge/-Godot 4.x-478CBF?style=for-the-badge&logo=godotengine&logoWidth=20&logoColor=white" />
 
 ## [Watch tutorial playlist on YouTube](https://youtube.com/playlist?list=PL5t0hR7ADzuk4M_GDeGcW7cDjG_xp710p)
+
+
+#### Godot version compatibility
+
+- Godot 4.x - [main branch](https://github.com/3ddelano/discord-bot-v2-godot/tree/main)
+- Godot 3.x - [godot3 branch](https://github.com/3ddelano/discord-bot-v2-godot/tree/godot3)
+
 
 Features
 --------------

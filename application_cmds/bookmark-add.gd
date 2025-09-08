@@ -1,4 +1,4 @@
-extends Reference
+extends RefCounted
 """
 Mark any message as a bookmark
 Steps

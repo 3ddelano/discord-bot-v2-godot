@@ -1,4 +1,4 @@
-extends Reference
+extends RefCounted
 """
 Example command showcasing nested SelectMenu
 """
@@ -24,7 +24,7 @@ var flows = {
 }
 
 func on_ready(main, bot: DiscordBot):
-	main.connect("interaction_create", self, "on_interaction")
+	main.interaction_create.connect(on_interaction)
 
 func on_message(main, bot: DiscordBot, message: Message, channel: Dictionary, args: Array) -> void:
 	# Store various important data for this interaction
@@ -34,7 +34,7 @@ func on_message(main, bot: DiscordBot, message: Message, channel: Dictionary, ar
 		"flow_name": "set"
 	}
 
-	var msg = yield(bot.send(message, _make_message(data)), "completed")
+	var msg = await bot.send(message, _make_message(data))
 	# Cache this in the interactions
 	main.interactions[msg.id] = data
 
@@ -64,21 +64,21 @@ func on_interaction(main, bot: DiscordBot, interaction: DiscordInteraction, data
 		"set":
 			# Here we update the flow to whichever the user chose
 			main.interactions[msg_id].flow_name = value
-			yield(interaction.update(_make_message(main.interactions[msg_id])), "completed")
+			await interaction.update(_make_message(main.interactions[msg_id]))
 
 		"set-country":
-			yield(interaction.update({
+			await interaction.update({
 				"content": ":white_check_mark: Your country was updated to: `" + value + "`",
 				"embeds": [],
 				"components": []
-			}), "completed")
+			})
 
 		"set-language":
-			yield(interaction.update({
-				"content": ":white_check_mark: Your languages was updated to: `" + PoolStringArray(interaction.data.values).join("`, `") + "`",
+			await interaction.update({
+				"content": ":white_check_mark: Your languages was updated to: `" + "`, `".join(PackedStringArray(interaction.data.values)) + "`",
 				"embeds": [],
 				"components": []
-			}), "completed")
+			})
 
 func get_usage(p: String) -> String:
 	return "`%sset`" % p

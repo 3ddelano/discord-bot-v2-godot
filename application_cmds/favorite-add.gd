@@ -1,4 +1,4 @@
-extends Reference
+extends RefCounted
 """
 Mark any user as a favorite
 Steps

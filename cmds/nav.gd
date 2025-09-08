@@ -1,4 +1,4 @@
-extends Reference
+extends RefCounted
 """
 A navigable embed based on Embed and MessageButton
 """
@@ -29,7 +29,8 @@ var buttons = {
 }
 
 func on_ready(main, bot: DiscordBot):
-	main.connect("interaction_create", self, "on_interaction")
+	main.interaction_create.connect(on_interaction)
+
 
 func on_message(main, bot: DiscordBot, message: Message, channel: Dictionary, args: Array) -> void:
 	var uid = message.author.id
@@ -40,7 +41,7 @@ func on_message(main, bot: DiscordBot, message: Message, channel: Dictionary, ar
 		"author_tag": tag,
 		"page_idx": 0
 	}
-	var msg = yield(bot.reply(message, _make_embed(data)), "completed")
+	var msg = await bot.reply(message, _make_embed(data))
 	main.interactions[msg.id] = data
 
 func _make_embed(data: Dictionary) -> Dictionary:

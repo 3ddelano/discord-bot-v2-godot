@@ -1,4 +1,4 @@
-extends Reference
+extends RefCounted
 """
 Sends your or the mentioned user's avatar
 """
@@ -6,7 +6,7 @@ Sends your or the mentioned user's avatar
 func execute(main, bot: DiscordBot, interaction: DiscordInteraction, options: Array) -> void:
 	var user: User = null
 
-	if options.empty():
+	if options.is_empty():
 		# Shows the user's avatar
 		user = interaction.member.user
 	else:

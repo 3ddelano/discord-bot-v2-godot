@@ -1,4 +1,4 @@
-extends Reference
+extends RefCounted
 """
 Sends some information about a user
 """
@@ -13,7 +13,7 @@ func on_message(main, bot: DiscordBot, message: Message, channel: Dictionary, ar
 		# Got a user Id
 		user_id = args[0]
 
-	var member = yield(bot.get_guild_member(message.guild_id, user_id), "completed")
+	var member = await bot.get_guild_member(message.guild_id, user_id)
 
 	if member.has("code"):
 		# User was not found
@@ -52,7 +52,7 @@ func on_message(main, bot: DiscordBot, message: Message, channel: Dictionary, ar
 		for role in member.roles:
 			roles.append("<@&%s>" % role)
 
-		roles = PoolStringArray(roles).join(" ")
+		roles = " ".join(PackedStringArray(roles))
 	else:
 		roles = "None"
 

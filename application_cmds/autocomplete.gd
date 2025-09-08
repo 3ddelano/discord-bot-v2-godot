@@ -1,4 +1,4 @@
-extends Reference
+extends RefCounted
 """
 An example to show autocompleted value in ApplicationCommand
 """

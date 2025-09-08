@@ -6,94 +6,13 @@
 ;   [section] ; section goes between []
 ;   param=value ; assign values to parameters
 
-config_version=4
-
-_global_script_classes=[ {
-"base": "Reference",
-"class": "ApplicationCommand",
-"language": "GDScript",
-"path": "res://addons/discord_gd/classes/application_command.gd"
-}, {
-"base": "Reference",
-"class": "BitField",
-"language": "GDScript",
-"path": "res://addons/discord_gd/classes/bit_field.gd"
-}, {
-"base": "HTTPRequest",
-"class": "DiscordBot",
-"language": "GDScript",
-"path": "res://addons/discord_gd/discord.gd"
-}, {
-"base": "Reference",
-"class": "DiscordInteraction",
-"language": "GDScript",
-"path": "res://addons/discord_gd/classes/discord_interaction.gd"
-}, {
-"base": "Reference",
-"class": "Embed",
-"language": "GDScript",
-"path": "res://addons/discord_gd/classes/embed.gd"
-}, {
-"base": "Reference",
-"class": "Helpers",
-"language": "GDScript",
-"path": "res://addons/discord_gd/classes/helpers.gd"
-}, {
-"base": "Reference",
-"class": "Message",
-"language": "GDScript",
-"path": "res://addons/discord_gd/classes/message.gd"
-}, {
-"base": "Reference",
-"class": "MessageActionRow",
-"language": "GDScript",
-"path": "res://addons/discord_gd/classes/message_action_row.gd"
-}, {
-"base": "Reference",
-"class": "MessageButton",
-"language": "GDScript",
-"path": "res://addons/discord_gd/classes/message_button.gd"
-}, {
-"base": "BitField",
-"class": "MessageFlags",
-"language": "GDScript",
-"path": "res://addons/discord_gd/classes/message_flags.gd"
-}, {
-"base": "BitField",
-"class": "Permissions",
-"language": "GDScript",
-"path": "res://addons/discord_gd/classes/permissions.gd"
-}, {
-"base": "Reference",
-"class": "SelectMenu",
-"language": "GDScript",
-"path": "res://addons/discord_gd/classes/select_menu.gd"
-}, {
-"base": "Reference",
-"class": "User",
-"language": "GDScript",
-"path": "res://addons/discord_gd/classes/user.gd"
-} ]
-_global_script_class_icons={
-"ApplicationCommand": "",
-"BitField": "",
-"DiscordBot": "",
-"DiscordInteraction": "",
-"Embed": "",
-"Helpers": "",
-"Message": "",
-"MessageActionRow": "",
-"MessageButton": "",
-"MessageFlags": "",
-"Permissions": "",
-"SelectMenu": "",
-"User": ""
-}
+config_version=5
 
 [application]
 
 config/name="Discord.gd Tutorial v2"
 run/main_scene="res://Main.tscn"
+config/features=PackedStringArray("4.4")
 config/icon="res://icon.png"
 
 [display]
@@ -103,7 +22,7 @@ window/size/height=360
 
 [editor_plugins]
 
-enabled=PoolStringArray( "res://addons/discord_gd/plugin.cfg" )
+enabled=PackedStringArray("res://addons/discord_gd/plugin.cfg")
 
 [physics]
 

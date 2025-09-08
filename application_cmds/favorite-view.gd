@@ -1,4 +1,4 @@
-extends Reference
+extends RefCounted
 """
 View your favorite users
 """
@@ -26,7 +26,7 @@ func execute(main, bot: DiscordBot, interaction: DiscordInteraction, data: Array
 		"embeds": [
 			Embed.new().set_title("Your favorites")\
 				.set_color("#e6e63e")\
-				.set_description(PoolStringArray(favorites).join("\n"))
+				.set_description("\n".join(PackedStringArray(favorites)))
 		],
 		# This prevents pinging all the users who are in favorites
 		"allowed_mentions": {

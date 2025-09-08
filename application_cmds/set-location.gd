@@ -1,4 +1,4 @@
-extends Reference
+extends RefCounted
 """
 Example command to showcase using choices and ApplicationCommand.choice()
 """

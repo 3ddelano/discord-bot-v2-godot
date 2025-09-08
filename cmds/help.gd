@@ -1,4 +1,4 @@
-extends Reference
+extends RefCounted
 """
 A fairly advanced help command
 """
@@ -45,7 +45,7 @@ func on_message(main, bot: DiscordBot, message: Message, channel: Dictionary, ar
 			help['usage'] = cmd.get_usage(main.prefix)
 			sorted.append(help)
 
-	sorted.sort_custom(CommandSorter, "sort_ascending")
+	sorted.sort_custom(CommandSorter.sort_ascending)
 
 	var category_cmds = {}
 	for cmd in sorted:
@@ -55,7 +55,7 @@ func on_message(main, bot: DiscordBot, message: Message, channel: Dictionary, ar
 			category_cmds[cmd.category].append("`" + cmd.name + "`")
 
 	for category in category_cmds.keys():
-		embed.add_field(category + " Category", PoolStringArray(category_cmds[category]).join(' '))
+		embed.add_field(category + " Category", ' '.join(PackedStringArray(category_cmds[category])))
 
 	bot.send(message, {
 		"embeds": [embed]
@@ -67,7 +67,7 @@ func _send_indiviual_command_help(main, bot: DiscordBot, message: Message, cmd):
 	embed.set_description("**Description**\n" + cmd.help.description).set_color("#f2b210").set_thumbnail("https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Ambox_blue_question.svg/768px-Ambox_blue_question.svg.png")
 
 	if cmd.help.has("aliases") and cmd.help.aliases.size() > 0:
-		embed.add_field("Aliases", "`" + main.prefix + PoolStringArray(cmd.help.aliases).join("`, `" + main.prefix) + "`")
+		embed.add_field("Aliases", "`" + main.prefix + ("`, `" + main.prefix).join(PackedStringArray(cmd.help.aliases)) + "`")
 
 	embed.add_field("Usage", cmd.get_usage(main.prefix))
 	bot.reply(message, {"embeds": [embed]})

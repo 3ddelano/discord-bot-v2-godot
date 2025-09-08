@@ -1,4 +1,4 @@
-extends Reference
+extends RefCounted
 """
 Replies with a magic 8ball reply
 """

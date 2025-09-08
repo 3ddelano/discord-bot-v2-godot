@@ -1,4 +1,4 @@
-extends Reference
+extends RefCounted
 """
 A math quiz game to showcase using SelectMenu.
 """
@@ -7,7 +7,7 @@ var first_digit = RegEx.new()
 var last_digit = RegEx.new()
 
 func on_ready(main, bot: DiscordBot):
-	main.connect("interaction_create", self, "on_interaction")
+	main.interaction_create.connect(on_interaction)
 
 	first_digit.compile("^[-]?(?'first'[1-9])(?'remaining'[0-9]*)$")
 	last_digit.compile("^[-]?(?'remaining'[1-9][0-9]*)(?'last'[0-9])$")
@@ -28,7 +28,7 @@ func on_message(main, bot: DiscordBot, message: Message, channel: Dictionary, ar
 		"answers": ques_data.answers,
 	}
 
-	var msg = yield(bot.send(message, _make_message(data)), "completed")
+	var msg = await bot.send(message, _make_message(data))
 	# Cache this in the interactions
 	main.interactions[msg.id] = data
 
@@ -78,7 +78,7 @@ func _gen_question() -> Dictionary:
 	var answers = [str(correct)]
 
 	# Add 1 random wrong answer
-	var rand_inc = floor(rand_range(-20, 20))
+	var rand_inc = floor(randi_range(-20, 20))
 	if rand_inc == 0:
 		rand_inc = randi() % 10 + 1
 	answers.append(str(correct + rand_inc))

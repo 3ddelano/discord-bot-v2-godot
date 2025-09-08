@@ -1,4 +1,4 @@
-extends Reference
+extends RefCounted
 """
 Example command to showcase using ApplicationCommand.boolean_option()
 """

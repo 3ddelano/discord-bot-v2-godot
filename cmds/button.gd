@@ -1,10 +1,10 @@
-extends Reference
+extends RefCounted
 """
 Example command to showcase using MessageButton
 """
 
 func on_ready(main, bot: DiscordBot):
-	main.connect("interaction_create", self, "on_interaction")
+	main.interaction_create.connect(on_interaction)
 
 func on_message(main, bot: DiscordBot, message: Message, channel: Dictionary, args: Array) -> void:
 	# Shows some buttons
@@ -20,10 +20,10 @@ func on_message(main, bot: DiscordBot, message: Message, channel: Dictionary, ar
 	row.add_component(button)
 	row2.add_component(button2)
 
-	var msg = yield(bot.send(message, {
+	var msg = await bot.send(message, {
 		"content": "Here's some buttons",
 		"components": [row, row2]
-	}), "completed")
+	})
 
 	# Cache the message with buttons
 	main.interactions[msg.id] = {

@@ -4,7 +4,7 @@ Represents a bitfield of Discord permissions.
 """
 
 var ALL
-var DEFAULT = 104324673
+const DEFAULT = 104324673
 
 
 func _init(bits = default_bit):
@@ -61,7 +61,6 @@ func _init(bits = default_bit):
 		prev |= value
 	ALL = prev
 
-	return self
 
 func missing(bits):
 	var BF = load('res://addons/discord_gd/classes/permissions.gd')

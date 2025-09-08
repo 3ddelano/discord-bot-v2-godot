@@ -1,7 +1,7 @@
-extends Reference
+extends RefCounted
 
 func on_ready(main, bot: DiscordBot) -> void:
-#	main.connect("interaction_create", self, "on_interaction")
+#	main.interaction_create.connect(on_interaction)
 	pass
 
 func on_message(main, bot: DiscordBot, message: Message, channel: Dictionary, args: Array) -> void:

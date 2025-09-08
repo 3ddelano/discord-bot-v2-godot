@@ -1,4 +1,4 @@
-extends Reference
+extends RefCounted
 """
 View your bookmarked messages
 """
@@ -29,7 +29,7 @@ func execute(main, bot: DiscordBot, interaction: DiscordInteraction, data: Array
 		"embeds": [
 			Embed.new().set_title("Your bookmarks")\
 				.set_color("#e6e63e")\
-				.set_description(PoolStringArray(bookmarks).join("\n"))
+				.set_description("\n".join(PackedStringArray(bookmarks)))
 		]
 	})
 

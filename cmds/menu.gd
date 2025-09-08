@@ -1,10 +1,10 @@
-extends Reference
+extends RefCounted
 """
 Example command to showcase using SelectMenu
 """
 
 func on_ready(main, bot: DiscordBot):
-	main.connect("interaction_create", self, "on_interaction")
+	main.interaction_create.connect(on_interaction)
 
 func on_message(main, bot: DiscordBot, message: Message, channel: Dictionary, args: Array) -> void:
 
@@ -26,10 +26,10 @@ func on_message(main, bot: DiscordBot, message: Message, channel: Dictionary, ar
 
 	var row = MessageActionRow.new().add_component(menu)
 
-	var msg = yield(bot.send(message, {
+	var msg = await bot.send(message, {
 		"content": "Here's a select menu for you",
 		"components": [row]
-	}), "completed")
+	})
 
 	# Cache this in the interactions
 	main.interactions[msg.id] = {

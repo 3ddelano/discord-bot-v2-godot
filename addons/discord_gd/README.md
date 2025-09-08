@@ -8,17 +8,37 @@ Discord.gd
 > 100% GDScript
 
 <br>
-<img alt="Godot3" src="https://img.shields.io/badge/-Godot 3.3.x-478CBF?style=for-the-badge&logo=godotengine&logoWidth=20&logoColor=white" />
+<img alt="Godot4" src="https://img.shields.io/badge/-Godot 4.x-478CBF?style=for-the-badge&logo=godotengine&logoWidth=20&logoColor=white" />
+
+![Make Discord bots in Godot image](https://raw.githubusercontent.com/3ddelano/discord.gd/refs/heads/main/discord_gd_thumbnail.jpg)
+
+
+#### Godot version compatibility
+
+- Godot 4.x - [main branch](https://github.com/3ddelano/discord.gd/tree/main)
+- Godot 3.x - [godot3 branch](https://github.com/3ddelano/discord.gd/tree/godot3)
 
 Features
 --------------
 
 - Make a Discord Bot in less than 10 lines of code
-- Easy and Simple to use
+- Supports `Buttons` and `SelectMenus`
+- Supports `Application Commands` aka `Slash Commands`
 - Uses Godot signals to emit events like `bot_ready`, `guild_create`, `message_create`, `message_delete`, etc.
-- Send / Receive messages and events from Discord
-- Get User Avatar and Guild Icon as Godot's ImageTexture
-- Uses coroutine functions i.e Promises
+- Get User Avatar and Guild Icon as Godot's `ImageTexture`
+- Uses coroutine async functions i.e Promises
+
+
+## [🚀 Check out out GDAI MCP from the creator of Discord.gd](https://gdaimcp.com?ref=discordgd-readme)
+<a href="https://gdaimcp.com?ref=discordgd-readme" target="_blank">
+<img src="https://gdaimcp.com/images/og/gdai-mcp.png" width="400" />
+</a>
+
+Supercharge your Godot 4.2+ workflow with GDAI MCP – the ultimate Godot MCP server that lets AI tools like Claude, Cursor, Windsurf, VSCode and more automate scene creation, node editing, reading godot errors, creating scripts, debugging, and more.
+
+Vibe code like never before!
+
+### 🔗 **[https://gdaimcp.com](https://gdaimcp.com?ref=discordgd-readme)**
 
 
 Installation
@@ -30,7 +50,7 @@ Copy the contents of `addons/discord_gd` into the `addons/` folder in the same d
 The plugin now comes with no extra assets to stay lightweight.
 If you want to try an example scene, you can see the examples from: [Discord.gd Examples](https://github.com/3ddelano/discord_gd_examples)
 
-> For in-depth installation instructions check the [Installation Wiki](https://github.com/3ddelano/discord.gd/wiki/Installation)
+> For in-depth installation instructions check the [Installation Wiki](https://3ddelano.github.io/discord.gd/installation)
 
 > Note: You will need a valid Discord Bot token available at [Discord Applications](https://discord.com/developers/applications)
 
@@ -56,11 +76,11 @@ func _ready():
 
 func _on_DiscordBot_bot_ready(bot: DiscordBot):
 	print('Logged in as ' + bot.user.username + '#' + bot.user.discriminator)
-	print('Listening on ' + str(bot.channels.size()) + ' channels and ' + str(bot.guilds.size()) ' guilds.')
+	print('Listening on ' + str(bot.channels.size()) + ' channels and ' + str(bot.guilds.size()) + ' guilds.')
 
 ```
 
-[Documentation](https://github.com/3ddelano/discord.gd/wiki)
+[Documentation](https://3ddelano.github.io/discord.gd)
 ----------
 
 
