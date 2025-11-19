@@ -1,0 +1,10 @@
+version: "3.9"
+
+services:
+  discord-bot:
+    build:
+      context: .
+    image: discord-bot-v2-godot
+    environment:
+      - DISCORD_BOT_TOKEN=${DISCORD_BOT_TOKEN}
+    restart: unless-stopped

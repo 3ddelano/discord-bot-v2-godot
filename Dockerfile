@@ -1,28 +1,15 @@
-FROM debian:bookworm-slim
+FROM ubuntu:24.04
 
-ENV GODOT_VERSION 4.5.1
-ENV GODOT_EXE_NAME Godot_v${GODOT_VERSION}-stable_linux.arm64
+ENV GODOT_VERSION="4.5.1-stable"
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        ca-certificates \
-        wget \
-        unzip \
-    && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y wget unzip
 
-RUN wget --quiet https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/${GODOT_EXE_NAME}.zip
-RUN mkdir ~/.cache
-RUN mkdir -p ~/.config/godot
-RUN unzip ${GODOT_EXE_NAME}.zip
-RUN mv ${GODOT_EXE_NAME} /usr/local/bin/godot
-RUN rm -f ${GODOT_EXE_NAME}.zip
-
-WORKDIR /godotapp
-
-COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+RUN wget https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v${GODOT_VERSION}_linux.arm64.zip -O /tmp/godot.zip \
+    && unzip /tmp/godot.zip -d /usr/local/bin/ \
+    && rm /tmp/godot.zip \
+    && mv /usr/local/bin/Godot_v${GODOT_VERSION}_linux.arm64 /usr/local/bin/godot \
+    && chmod +x /usr/local/bin/godot
 
 COPY . .
 
-ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["godot", "--headless", "--path", "."]
