@@ -19,5 +19,10 @@ RUN rm -f ${GODOT_EXE_NAME}.zip
 
 WORKDIR /godotapp
 
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 COPY . .
-CMD godot --headless --path .
+
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+CMD ["godot", "--headless", "--path", "."]
