@@ -75,7 +75,7 @@ func _on_message_create(bot: DiscordBot, message: Message, channel: Dictionary) 
 	for token in r.search_all(raw_content):
 		tokens.append(token.get_string())
 	var cmd_or_alias = tokens[0].to_lower()
-	tokens.remove(0) # Remove the command name from the tokens
+	tokens.remove_at(0) # Remove the command name from the tokens
 	var args = tokens
 	_handle_command(bot, message, channel, cmd_or_alias, args)
 
@@ -152,7 +152,7 @@ func _register_application_commands(bot, guild_id: String = "") -> void:
 		application_commands_data.append(app_cmd.data)
 
 	bot.register_commands(application_commands_data, guild_id)
-
+	
 func _handle_command(bot: DiscordBot, message: Message, channel: Dictionary, cmd_or_alias: String, args: Array):
 	var cmd = null
 	if command_aliases.has(cmd_or_alias):
