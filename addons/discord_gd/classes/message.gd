@@ -58,7 +58,7 @@ var MESSAGE_TYPES = {
 	'22': 'GUILD_INVITE_REMINDER'
 }
 
-func _init(message: Dictionary):
+func _init(message: Dictionary, client = null):
 	# Compulsory
 	assert(typeof(message) == TYPE_DICTIONARY, 'Invalid type: message must be a Dictionary')
 	assert(message.id, 'Message must have an id')
@@ -74,13 +74,17 @@ func _init(message: Dictionary):
 		assert(false, 'Message must have a valid type')
 
 	assert(message.has('author'), 'Message must have an author')
+	
 	# Check if the message is sent by webhook
 	if message.has('webhook_id') and Helpers.is_str(message.webhook_id) and message.webhook_id.length() > 0:
 		# webhook sent a message
 		pass
 	else:
 		# sent by user
-		assert(message.author is User, 'author attribute of Mesage must be of type User')
+		if not message.author is User:
+			message.author = User.new(client, message.author)
+		else:
+			assert(message.author is User, 'author attribute of Mesage must be of type User')
 	author = message.author
 
 	if message.has('flags'):

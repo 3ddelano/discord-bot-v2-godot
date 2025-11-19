@@ -72,11 +72,13 @@ const CHANNEL_TYPES = {
 	'3': 'GROUP_DM',
 	'4': 'GUILD_CATEGORY',
 	'5': 'GUILD_NEWS',
-	'6': 'GUILD_STORE',
 	'10': 'GUILD_NEWS_THREAD',
 	'11': 'GUILD_PUBLIC_THREAD',
 	'12': 'GUILD_PRIVATE_THREAD',
-	'13': 'GUILD_STAGE_VOICE'
+	'13': 'GUILD_STAGE_VOICE',
+	'14': 'GUILD_DIRECTORY',
+	'15': 'GUILD_FORUM',
+	'16': 'GUILD_MEDIA',
 }
 
 var GUILD_ICON_SIZES = [16, 32, 64, 128, 256, 512, 1024, 2048, 4096]
@@ -195,11 +197,14 @@ func get_channel_messages(channel_id: String, limit := 50, filter_type := "", fi
 # See https://discord.com/developers/docs/resources/message#get-channel-message
 func get_channel_message(channel_id: String, message_id: String) -> Message:
 	var res = await _send_get('/channels/%s/messages/%s' % [channel_id, message_id])
-	return res
+	await _parse_message(res)
+	return Message.new(res)
 
 
 func create_dm_channel(user_id: String) -> Dictionary:
 	var res = await _send_request('/users/@me/channels', {'recipient_id': user_id})
+	if typeof(res) == TYPE_DICTIONARY:
+		_clean_channel(res)
 	return res
 
 
@@ -564,6 +569,11 @@ func set_presence(p_options: Dictionary) -> void:
 	_update_presence(new_presence)
 
 
+func trigger_typing_indicator(p_channel_id: String):
+	var res = await _send_request('/channels/%s/typing' % [p_channel_id], {}, HTTPClient.METHOD_POST)
+	return res
+
+
 
 #region Inbuilt Functions
 
@@ -667,7 +677,7 @@ func _data_received(msg: String) -> void:
 
 func _send_heartbeat() -> void:  # Send heartbeat OP code 1
 	if not _heartbeat_ack_received:
-		_client.disconnect_from_host(1002)
+		_client.close(1002)
 		return
 
 	var response_payload = {'op': 1, 'd': _last_seq}
@@ -774,13 +784,9 @@ func _handle_events(dict: Dictionary) -> void:
 				if d.sticker_items.size() != 0:
 					return
 
-			var coroutine = await _parse_message(d)
-			if coroutine == null:
-				# message might be a thread
-				# TODO: Handle sending messages in threads
-				return
+			await _parse_message(d)
 
-			d = Message.new(d)
+			d = Message.new(d, self)
 
 			var channel = channels.get(str(d.channel_id))
 			message_create.emit(self, d, channel)
@@ -961,6 +967,8 @@ func _send_request(slug: String, payload, method = HTTPClient.METHOD_POST):
 func _get_dm_channel(channel_id: String) -> Dictionary:
 	assert(Helpers.is_valid_str(channel_id), 'Invalid Type: channel_id must be a valid String')
 	var data = await _send_get('/channels/%s' % channel_id)
+	if typeof(data) == TYPE_DICTIONARY:
+		_clean_channel(data)
 	return data
 
 
@@ -1158,9 +1166,11 @@ func _send_message_request(
 	if method == HTTPClient.METHOD_DELETE:
 		return res
 	else:
-		var coroutine = await _parse_message(res)
-		if typeof(coroutine) == TYPE_OBJECT:
-			coroutine = await coroutine
+		await _parse_message(res)
+		
+		if res.has("code") and res.has("errors"):
+			# its an error
+			return res
 
 		var msg = Message.new(res)
 		return msg
@@ -1207,6 +1217,10 @@ func _setup_heartbeat_timer(interval: int) -> void:
 
 
 func _send_dict_wss(d: Dictionary) -> void:
+	if _client.get_ready_state() != WebSocketPeer.STATE_OPEN:
+		if VERBOSE:
+			print("Failed to send packet as websocket state is not open. Got state: " + str(_client.get_ready_state()))
+		return
 	var payload = JSON.stringify(d)
 	var err = _client.put_packet(payload.to_utf8_buffer())
 	if OK != err:
@@ -1250,12 +1264,22 @@ func _clean_guilds(guilds: Array) -> void:
 
 
 func _clean_channel(channel: Dictionary) -> void:
-	if channel.has('type') and str(channel.type) in CHANNEL_TYPES.keys():
+	_float_to_int(channel, "type")
+	_float_to_int(channel, "flags")
+	if channel.has('type') and typeof(channel.type) == TYPE_INT:
 		channel.type = CHANNEL_TYPES.get(str(channel.type))
 
 
-func _parse_message(message: Dictionary):
-	assert(typeof(message) == TYPE_DICTIONARY, 'Invalid Type: message must be a Dictionary')
+func _parse_message(message):
+	if typeof(message) == TYPE_OBJECT and message is Message:
+		return message
+	
+	if typeof(message) != TYPE_DICTIONARY:
+		printerr("_parse_message error: Type of message must be dictionary")
+		return null
+	
+	_float_to_int(message, "type")
+	_float_to_int(message, "flags")
 
 	if message.has('channel_id') and message.channel_id:
 		# Check if channel is cached
@@ -1269,16 +1293,17 @@ func _parse_message(message: Dictionary):
 			channel = await _get_dm_channel(message.channel_id)
 			_clean_channel(channel)
 
-			if channel and channel.has('type') and channel.type == 'DM':
-				channels[str(message.channel_id)] = channel
-			else:
-				# not a valid channel, it might be a thread
-				return null
+			channels[str(message.channel_id)] = channel
 
 	if message.has('author') and typeof(message.author) == TYPE_DICTIONARY:
 		# get the cached author of the message
 		message.author = User.new(self, message.author)
 
 	return 1
+
+
+func _float_to_int(dict, key):
+	if dict.has(key) and typeof(dict[key]) == TYPE_FLOAT:
+		dict[key] = int(dict[key])
 
 #endregion
