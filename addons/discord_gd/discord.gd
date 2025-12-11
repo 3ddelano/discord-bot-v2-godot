@@ -585,6 +585,8 @@ func _ready() -> void:
 
 	# Setup web socket client
 	_client = WebSocketPeer.new()
+	_client.inbound_buffer_size = 4 * 1024 * 1024
+	_client.outbound_buffer_size = 4 * 1024 * 1024
 
 	$HeartbeatTimer.timeout.connect(_send_heartbeat)
 
@@ -637,6 +639,10 @@ func _data_received(msg: String) -> void:
 	var op = str(int(dict.op))  # OP Code Received
 	var d = dict.d  # Data Received
 	
+	if VERBOSE:
+		print("Got packet op=" + op)
+		print(msg)
+	
 	match op:
 		'10':
 			# Got hello
@@ -662,7 +668,7 @@ func _data_received(msg: String) -> void:
 			# Heartbeat Acknowledged
 			_heartbeat_ack_received = true
 			if VERBOSE:
-				print('Heartbeat ack')
+				print('Heartbeat ack at ' + str(Time.get_unix_time_from_system()))
 		'9':
 			# Opcode 9 Invalid Session
 			_invalid_session_is_resumable = d
@@ -684,7 +690,7 @@ func _send_heartbeat() -> void:  # Send heartbeat OP code 1
 	_send_dict_wss(response_payload)
 	_heartbeat_ack_received = false
 	if VERBOSE:
-		print('Heartbeat sent!')
+		print('Heartbeat sent at ' + str(Time.get_unix_time_from_system()))
 
 
 func _handle_events(dict: Dictionary) -> void:
@@ -1210,7 +1216,7 @@ func _jsonstring_to_dict(data: String):
 
 func _setup_heartbeat_timer(interval: int) -> void:
 	# Setup heartbeat timer and start it
-	_heartbeat_interval = int(interval) / 1000
+	_heartbeat_interval = (int(interval) / 1000) - 2
 	var timer = $HeartbeatTimer
 	timer.wait_time = _heartbeat_interval
 	timer.start()
