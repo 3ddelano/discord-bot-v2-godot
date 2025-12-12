@@ -44,20 +44,21 @@ signal message_reaction_remove_emoji(bot, data) # bot: DiscordBot, data: Diction
 
 
 
+#region Constants
+const Gateway = preload("./gateway.gd")
+const DispatchEvents = Gateway.DispatchEvents
+#endregion
+
+
+
+
 #region Private Variables
-var _gateway_base = 'wss://gateway.discord.gg/?v=9&encoding=json'
 var _https_domain = 'https://discord.com'
 var _api_slug = '/api/v9'
 var _https_base = _https_domain + _api_slug
 var _cdn_base = 'https://cdn.discordapp.com'
 var _headers: Array
-var _client: WebSocketPeer
-var _sess_id: String
-var _last_seq: float
-var _invalid_session_is_resumable: bool
-var _heartbeat_interval: int
-var _heartbeat_ack_received = true
-
+var _gateway: Gateway
 #endregion
 
 
@@ -97,7 +98,7 @@ func login() -> void:
 		'User-Agent: discord.gd (https://github.com/3ddelano/discord.gd)'
 	]
 
-	var err = _client.connect_to_url(_gateway_base)
+	var err = _gateway.login()
 
 	if err == ERR_INVALID_PARAMETER:
 		if VERBOSE:
@@ -514,24 +515,22 @@ func get_commands(guild_id: String = '') -> Array:
 #endregion
 
 
+## [code]
+## p_options {
+## 	status: String, text of the presence,
+## 	afk: bool, whether or not the client is afk,
+## 		activity: {
+##			type: String, type of the presence,
+##			name: String, name of the presence,
+##			url: String, url of the presence,
+##			created_at: int, unix timestamp (in milliseconds) of when activity was added to user's session
+##		}
+##	}
+## [/code]
 func set_presence(p_options: Dictionary) -> void:
-	"""
-		p_options {
-			status: String, text of the presence,
-			afk: bool, whether or not the client is afk,
-
-			activity: {
-				type: String, type of the presence,
-				name: String, name of the presence,
-				url: String, url of the presence,
-				created_at: int, unix timestamp (in milliseconds) of when activity was added to user's session
-			}
-		}
-	"""
 
 	var new_presence = {'status': 'online', 'afk': false, 'activity': {}}
 
-	assert(p_options, 'Missing options for set_presence')
 	assert(
 		typeof(p_options) == TYPE_DICTIONARY,
 		'Invalid Type: options in set_presence must be a Dictionary'
@@ -580,34 +579,10 @@ func trigger_typing_indicator(p_channel_id: String):
 func _ready() -> void:
 	randomize()
 
-	# Generate needed nodes
-	_generate_timer_nodes()
-
-	# Setup web socket client
-	_client = WebSocketPeer.new()
-	_client.inbound_buffer_size = 4 * 1024 * 1024
-	_client.outbound_buffer_size = 4 * 1024 * 1024
-
-	$HeartbeatTimer.timeout.connect(_send_heartbeat)
-
-
-func _process(_delta) -> void:
-	if not _client:
-		return
-	
-	_client.poll()
-	
-	var state = _client.get_ready_state()
-
-	if state == WebSocketPeer.STATE_OPEN:
-		while _client.get_available_packet_count():
-			var packet = _client.get_packet()
-			_data_received(packet.get_string_from_utf8())
-	elif state == WebSocketPeer.STATE_CLOSED:
-		var code = _client.get_close_code()
-		var reason = _client.get_close_reason()
-		_connection_closed(code, reason)
-		set_process(false) # Stop processing.
+	_gateway = Gateway.new(self)
+	_gateway.name = "DiscordGateway"
+	_gateway.dispatch_event_received.connect(_on_dispatch_event_received)
+	add_child(_gateway)
 
 #endregion
 
@@ -615,219 +590,123 @@ func _process(_delta) -> void:
 
 #region Private Functions
 
+func _on_dispatch_event_received(event_name: String, data: Dictionary):
+	match event_name:
+		DispatchEvents.READY:
+			_on_ready_event(data)
+		DispatchEvents.GUILD_CREATE:
+			_on_guild_create_event(data)
+		DispatchEvents.GUILD_UPDATE:
+			_on_guild_update_event(data)
+		DispatchEvents.GUILD_DELETE:
+			_on_guild_delete_event(data)
+		DispatchEvents.GUILD_MEMBER_UPDATE:
+			_on_guild_member_update_event(data)
+		DispatchEvents.MESSAGE_CREATE:
+			_on_message_create_event(data)
+		DispatchEvents.MESSAGE_DELETE:
+			_on_message_delete_event(data)
+		DispatchEvents.MESSAGE_REACTION_ADD:
+			_on_message_reaction_add_event(data)
+		DispatchEvents.MESSAGE_REACTION_REMOVE:
+			_on_message_reaction_remove_event(data)
+		DispatchEvents.MESSAGE_REACTION_REMOVE_ALL:
+			_on_message_reaction_remove_all_event(data)
+		DispatchEvents.MESSAGE_REACTION_REMOVE_EMOJI:
+			_on_message_reaction_remove_emoji_event(data)
+		DispatchEvents.INTERACTION_CREATE:
+			_on_interaction_create_event(data)
 
-func _generate_timer_nodes() -> void:
-	var heart_beat_timer = Timer.new()
-	heart_beat_timer.name = 'HeartbeatTimer'
-	add_child(heart_beat_timer)
 
-	var invalid_session_timer = Timer.new()
-	invalid_session_timer.name = 'InvalidSessionTimer'
-	add_child(invalid_session_timer)
-
-
-func _connection_closed(code: int, reason: String) -> void:
-	if VERBOSE:
-		print('WSS connection closed with code=%s, reason=%s' % [code, reason])
-
-
-func _data_received(msg: String) -> void:
-	#if VERBOSE:
-		#print("Got packet: ", msg)
-	var data := msg
-	var dict = _jsonstring_to_dict(data)
-	var op = str(int(dict.op))  # OP Code Received
-	var d = dict.d  # Data Received
+func _on_ready_event(data: Dictionary):
+	application = data.application
+	user = User.new(self, data.user)
 	
-	if VERBOSE:
-		print("Got packet op=" + op)
-		print(msg)
+	var _guilds = data.guilds
+	_clean_guilds(_guilds)
+	for guild in _guilds:
+		guilds[guild.id] = guild
+
+
+func _on_guild_create_event(guild: Dictionary) -> void:
+	_clean_guilds([guild])
 	
-	match op:
-		'10':
-			# Got hello
-			_setup_heartbeat_timer(d.heartbeat_interval)
+	# Update number of cached guilds
+	if guild.has('lazy') and guild.lazy:
+		guilds_loaded += 1
+		if guilds_loaded == guilds.size():
+			bot_ready.emit(self)
 
-			var response_d = {'op': -1}
-			if _sess_id:
-				# Resume session
-				response_d.op = 6
-				response_d['d'] = {'token': TOKEN, 'session_id': _sess_id, 'seq': _last_seq}
-			else:
-				# Make new session
-				response_d.op = 2
-				response_d['d'] = {
-					'token': TOKEN,
-					'intents': INTENTS,
-					'properties':
-					{'$os': 'linux', '$browser': 'discord.gd', '$device': 'discord.gd'}
-				}
+	if not guilds.has(guild.id):
+		# Joined a new guild
+		guild_create.emit(self, guild)
 
-			_send_dict_wss(response_d)
-		'11':
-			# Heartbeat Acknowledged
-			_heartbeat_ack_received = true
-			if VERBOSE:
-				print('Heartbeat ack at ' + str(Time.get_unix_time_from_system()))
-		'9':
-			# Opcode 9 Invalid Session
-			_invalid_session_is_resumable = d
-			var timer = $InvalidSessionTimer
-			timer.one_shot = true
-			timer.wait_time = randi_range(1, 5)
-			timer.start()
-		'0':
-			# Event Dispatched
-			_handle_events(dict)
+	# Update cache
+	guilds[guild.id] = guild
 
 
-func _send_heartbeat() -> void:  # Send heartbeat OP code 1
-	if not _heartbeat_ack_received:
-		_client.close(1002)
+func _on_guild_update_event(guild: Dictionary) -> void:
+	_clean_guilds([guild])
+	guilds[guild.id] = guild
+	guild_update.emit(self, guild)
+
+
+func _on_guild_delete_event(guild: Dictionary) -> void:
+	guilds.erase(guild.id)
+	guild_delete.emit(self, guild.id)
+
+
+func _on_guild_member_update_event(member: Dictionary) -> void:
+	var guild = guilds[member.guild_id]
+	member.erase('guild_id')
+
+	# Update users cache
+	var guild_user = member.user
+	var user_id =  guild_user.id
+	member.erase('user')
+	users[user_id] = guild_user
+
+	if member.has('pending'):
+		var pending = member.pending
+		member.erase('pending')
+		member.is_pending = pending
+	guild.members[user_id] = member
+
+
+func _on_message_create_event(msg: Dictionary) -> void:
+	# Dont respond to webhooks
+	if msg.has('webhook_id') and msg.webhook_id:
 		return
 
-	var response_payload = {'op': 1, 'd': _last_seq}
-	_send_dict_wss(response_payload)
-	_heartbeat_ack_received = false
-	if VERBOSE:
-		print('Heartbeat sent at ' + str(Time.get_unix_time_from_system()))
+	if msg.has('sticker_items') and msg.sticker_items and typeof(msg.sticker_items) == TYPE_ARRAY:
+		if msg.sticker_items.size() != 0:
+			return
 
+	await _parse_message(msg)
 
-func _handle_events(dict: Dictionary) -> void:
-	_last_seq = dict.s
-	var event_name = dict.t
+	var message = Message.new(msg, self)
 
-	match event_name:
-		'READY':
-			_sess_id = dict.d.session_id
-			var d = dict.d
+	var channel = channels.get(str(message.channel_id))
+	message_create.emit(self, message, channel)
 
-			var _application = d.application
-			var _guilds = d.guilds
-			_clean_guilds(_guilds)
+func _on_message_delete_event(msg: Dictionary) -> void:
+	message_delete.emit(self, msg)
 
-			var _user: User = User.new(self, d.user)
-			user = _user
-			application = _application
+func _on_message_reaction_add_event(data: Dictionary) -> void:
+	message_reaction_add.emit(self, data)
 
-			for guild in _guilds:
-				guilds[guild.id] = guild
+func _on_message_reaction_remove_event(data: Dictionary) -> void:
+	message_reaction_remove.emit(self, data)
 
-		'GUILD_CREATE':
-			var guild = dict.d
-			_clean_guilds([guild])
-			# Update number of cached guilds
-			if guild.has('lazy') and guild.lazy:
-				guilds_loaded += 1
-				if guilds_loaded == guilds.size():
-					bot_ready.emit(self)
+func _on_message_reaction_remove_all_event(data: Dictionary) -> void:
+	message_reaction_remove_all.emit(self, data)
 
-			if not guilds.has(guild.id):
-				# Joined a new guild
-				guild_create.emit(self, guild)
+func _on_message_reaction_remove_emoji_event(data: Dictionary) -> void:
+	message_reaction_remove_emoji.emit(self, data)
 
-			# Update cache
-			guilds[guild.id] = guild
-
-		'GUILD_UPDATE':
-			var guild = dict.d
-			_clean_guilds([guild])
-			guilds[guild.id] = guild
-			guild_update.emit(self, guild)
-
-		'GUILD_DELETE':
-			var guild = dict.d
-			guilds.erase(guild.id)
-			guild_delete.emit(self, guild.id)
-
-		# 'GUILD_MEMBER_ADD':
-		# 	print('-----------guild member add')
-		# 	var member = dict.d
-		# 	print(member)
-
-		# 'GUILD_MEMBER_UPDATE':
-		# 	print('--------guild_member update')
-		# 	var data = dict.d
-
-		# 	var guild = guilds[data.guild_id]
-		# 	data.erase('guild_id')
-
-		# 	# Update users cache
-		# 	var user = data.user
-		# 	var user_id =  user.id
-		# 	data.erase('user')
-		# 	users[user_id] = user
-
-		# 	if data.has('pending'):
-		# 		var pending = data.pending
-		# 		data.erase('pending')
-		# 		data.is_pending = pending
-		# 	guild.members[user_id] = data
-
-		# 'GUILD_MEMBER_DELETE':
-		# 	print('-----------guild member delete')
-		# 	var member = dict.d
-		# 	print(member)
-
-		# 'GUILD_MEMBERS_CHUNK':
-		# 	print('-----------guild member chunk')
-		# 	var member = dict.d
-		# 	print(member)
-
-
-		'RESUMED':
-			if VERBOSE:
-				print('Session Resumed')
-
-		'MESSAGE_CREATE':
-			var d = dict.d
-
-			# Dont respond to webhooks
-			if d.has('webhook_id') and d.webhook_id:
-				return
-
-			if d.has('sticker_items') and d.sticker_items and typeof(d.sticker_items) == TYPE_ARRAY:
-				if d.sticker_items.size() != 0:
-					return
-
-			await _parse_message(d)
-
-			d = Message.new(d, self)
-
-			var channel = channels.get(str(d.channel_id))
-			message_create.emit(self, d, channel)
-
-		'MESSAGE_DELETE':
-			var d = dict.d
-			message_delete.emit(self, d)
-
-		'MESSAGE_REACTION_ADD':
-			var d = dict.d
-
-			message_reaction_add.emit(self, d)
-
-		'MESSAGE_REACTION_REMOVE':
-			var d = dict.d
-			message_reaction_remove.emit(self, d)
-
-		'MESSAGE_REACTION_REMOVE_ALL':
-			var d = dict.d
-			message_reaction_remove_all.emit(self, d)
-
-		'MESSAGE_REACTION_REMOVE_EMOJI':
-			var d = dict.d
-			message_reaction_remove_emoji.emit(self, d)
-
-		'INTERACTION_CREATE':
-			var d = dict.d
-
-			var id = d.id
-			var data = d.data
-			var token = d.token
-
-			var interaction = await DiscordInteraction.new(self, d)
-			interaction_create.emit(self, interaction)
-
+func _on_interaction_create_event(data: Dictionary) -> void:
+	var interaction = await DiscordInteraction.new(self, data)
+	interaction_create.emit(self, interaction)
 
 func _send_raw_request(slug: String, payload: Dictionary, method = HTTPClient.METHOD_POST):
 	var headers = _headers.duplicate(true)
@@ -908,7 +787,7 @@ func _send_raw_request(slug: String, payload: Dictionary, method = HTTPClient.ME
 			else:
 				rb = rb + chunk  # Append to read buffer.
 
-		var response = _jsonstring_to_dict(rb.get_string_from_utf8())
+		var response = _from_json(rb.get_string_from_utf8())
 		if response == null:
 			if http_client.get_response_code() == 204:
 				return true
@@ -947,7 +826,7 @@ func _send_request(slug: String, payload, method = HTTPClient.METHOD_POST):
 
 	# Check for errors
 	assert(data[0] == HTTPRequest.RESULT_SUCCESS, 'Error sending request: HTTP Failed')
-	var response = _jsonstring_to_dict(data[3].get_string_from_utf8())
+	var response = _from_json(data[3].get_string_from_utf8())
 	if response == null:
 		if data[1] == 204:
 			return true
@@ -990,7 +869,7 @@ func _send_get(slug, method = HTTPClient.METHOD_GET, additional_headers = []):
 
 	assert(data[0] == HTTPRequest.RESULT_SUCCESS)
 	if method == HTTPClient.METHOD_GET:
-		var response = _jsonstring_to_dict(data[3].get_string_from_utf8())
+		var response = _from_json(data[3].get_string_from_utf8())
 		if response != null and response.has('code'):
 			# Got an error
 			print('GET: status code ', str(data[1]))
@@ -1160,12 +1039,7 @@ func _send_message_request(
 	var res
 	if payload.has('files') and payload.files and typeof(payload.files) == TYPE_ARRAY:
 		# Send raw post request using multipart/form-data
-		var coroutine = await _send_raw_request(slug, payload, method)
-		if typeof(coroutine) == TYPE_OBJECT:
-			res = await coroutine
-		else:
-			res = coroutine
-
+		res = await _send_raw_request(slug, payload, method)
 	else:
 		res = await _send_request(slug, payload, method)
 
@@ -1177,6 +1051,8 @@ func _send_message_request(
 		if res.has("code") and res.has("errors"):
 			# its an error
 			return res
+		if not res.has("id"):
+			return res
 
 		var msg = Message.new(res)
 		return msg
@@ -1186,52 +1062,34 @@ func _update_presence(new_presence: Dictionary) -> void:
 	var status = new_presence.status
 	var activity = new_presence.activity
 
-	var response_d = {
-		'op': 3,  # Presence update
+	var payload = {
+		op = 3,  # Presence update
+		d = {
+			since = new_presence if new_presence.has('since') else null,
+			status = new_presence.status,
+			afk = new_presence.afk,
+			activities = [new_presence.activity]
+		}
 	}
-	response_d['d'] = {
-		'since': new_presence if new_presence.has('since') else null,
-		'status': new_presence.status,
-		'afk': new_presence.afk,
-		'activities': [new_presence.activity]
-	}
-	_send_dict_wss(response_d)
+	_gateway.send_payload(payload)
 
 
 # Helper functions
-func _jsonstring_to_dict(data: String):
+
+# Convert JSON-string to a Godot type eg. Dictionary/Array/float/string
+func _from_json(data: String) -> Variant:
 	var json = JSON.new()
 	var result = json.parse(data)
 	
 	if not data:
-		return {}
+		return null
 	
 	if result != OK:
 		if VERBOSE:
 			print("Failed to parse json: error at line %s with msg %s for data %s" % [json.get_error_line(), json.get_error_message(), data])
-		return {}
+		return null
 	
 	return json.data
-
-
-func _setup_heartbeat_timer(interval: int) -> void:
-	# Setup heartbeat timer and start it
-	_heartbeat_interval = (int(interval) / 1000) - 2
-	var timer = $HeartbeatTimer
-	timer.wait_time = _heartbeat_interval
-	timer.start()
-
-
-func _send_dict_wss(d: Dictionary) -> void:
-	if _client.get_ready_state() != WebSocketPeer.STATE_OPEN:
-		if VERBOSE:
-			print("Failed to send packet as websocket state is not open. Got state: " + str(_client.get_ready_state()))
-		return
-	var payload = JSON.stringify(d)
-	var err = _client.put_packet(payload.to_utf8_buffer())
-	if OK != err:
-		if VERBOSE:
-			print("Failed to send packet: error=%s (%s)" % [error_string(err), err])
 
 
 func _clean_guilds(guilds: Array) -> void:
